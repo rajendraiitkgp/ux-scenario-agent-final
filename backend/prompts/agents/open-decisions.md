@@ -1,0 +1,1 @@
+Extract unresolved product/UX decisions, dependencies, unanswered questions, external teams/systems, assumptions needing validation and risks. Prioritize by impact and urgency. Do not turn unknowns into invented requirements.

@@ -1,0 +1,1 @@
+Analyze information architecture and product structure: entities, hierarchy, navigation, screen/page relationships, grouping, dependencies, states and reusable structures. Distinguish explicit from inferred structure and flag ambiguity.

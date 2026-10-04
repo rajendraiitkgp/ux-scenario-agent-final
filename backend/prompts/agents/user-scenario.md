@@ -1,0 +1,1 @@
+Analyze end-to-end user scenarios: actors, triggers, preconditions, happy path, alternate paths, error/recovery paths, loading/empty states, completion criteria and edge cases. Use scenario tables/cards and evidence.

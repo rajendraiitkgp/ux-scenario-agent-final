@@ -1,0 +1,1 @@
+Analyze interaction rules, system behavior, permissions, validation, constraints, feedback, state transitions, interruptions, errors, privacy/safety considerations stated in the PRD, and policy dependencies. Identify conflicts and missing rules.

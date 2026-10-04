@@ -1,0 +1,9 @@
+import pg from 'pg';
+import type { Analysis } from '../types.js';
+const {Pool}=pg;
+const pool=new Pool({connectionString:process.env.DATABASE_URL});
+export async function initDb(){await pool.query(`CREATE TABLE IF NOT EXISTS ux_analyses (id TEXT PRIMARY KEY,name TEXT NOT NULL,prd TEXT NOT NULL,selected JSONB NOT NULL,status TEXT NOT NULL,runs JSONB NOT NULL,final_html TEXT,critic JSONB,created_at TIMESTAMPTZ NOT NULL,updated_at TIMESTAMPTZ NOT NULL)`)}
+export async function saveDb(a:Analysis){await pool.query(`INSERT INTO ux_analyses(id,name,prd,selected,status,runs,final_html,critic,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,prd=EXCLUDED.prd,selected=EXCLUDED.selected,status=EXCLUDED.status,runs=EXCLUDED.runs,final_html=EXCLUDED.final_html,critic=EXCLUDED.critic,updated_at=EXCLUDED.updated_at`,[a.id,a.name,a.prd,JSON.stringify(a.selected),a.status,JSON.stringify(a.runs),a.finalHtml??null,a.critic?JSON.stringify(a.critic):null,a.createdAt,a.updatedAt]);return a}
+export async function getDb(id:string){const r=await pool.query('SELECT * FROM ux_analyses WHERE id=$1',[id]);return r.rows[0]?row(r.rows[0]):undefined}
+export async function listDb(){const r=await pool.query('SELECT id,name,status,selected,created_at,updated_at,final_html FROM ux_analyses ORDER BY updated_at DESC');return r.rows.map(x=>({id:x.id,name:x.name,status:x.status,selected:x.selected,createdAt:new Date(x.created_at).toISOString(),updatedAt:new Date(x.updated_at).toISOString(),hasReport:Boolean(x.final_html)}))}
+function row(x:any):Analysis{return{id:x.id,name:x.name,prd:x.prd,selected:x.selected,status:x.status,runs:x.runs,finalHtml:x.final_html??undefined,critic:x.critic??undefined,createdAt:new Date(x.created_at).toISOString(),updatedAt:new Date(x.updated_at).toISOString()}}

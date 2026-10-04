@@ -1,0 +1,1 @@
+Define UX design scope: screens/views, components, states, device considerations, accessibility considerations, content requirements, prototypes, edge cases and design deliverables. Distinguish explicit scope from inferred scope and identify out-of-scope areas.

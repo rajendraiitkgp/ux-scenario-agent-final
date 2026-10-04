@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ux_scenario_agent
+      POSTGRES_USER: uxagent
+      POSTGRES_PASSWORD: uxagent
+    ports:
+      - "5432:5432"
+    volumes:
+      - ux-agent-pg:/var/lib/postgresql/data
+volumes:
+  ux-agent-pg:

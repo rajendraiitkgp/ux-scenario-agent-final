@@ -1,0 +1,21 @@
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import { createAnalysis, subscribe, rerunPerspective, cancelAnalysis } from './services/orchestrator.js';
+import { get, list, initStore } from './store/index.js';
+import { PERSPECTIVES } from './types.js';
+import type { Perspective } from './types.js';
+
+const app=express();const port=Number(process.env.PORT||8787);
+app.use(cors({origin:process.env.FRONTEND_ORIGIN||'http://localhost:5173'}));app.use(express.json({limit:'8mb'}));
+app.get('/api/health',(_,res)=>res.json({ok:true,codex:true,perspectives:PERSPECTIVES}));
+app.get('/api/perspectives',(_,res)=>res.json(PERSPECTIVES));
+app.get('/api/analyses',async(_,res)=>res.json(await list()));
+app.get('/api/analyses/:id',async(req,res)=>{const a=await get(req.params.id);if(!a)return res.status(404).json({error:'Analysis not found'});res.json(a)});
+app.get('/api/analyses/:id/events',async(req,res)=>{const a=await get(req.params.id);if(!a)return res.status(404).end();res.setHeader('Content-Type','text/event-stream');res.setHeader('Cache-Control','no-cache');res.setHeader('Connection','keep-alive');res.flushHeaders?.();const send=(e:any)=>res.write(`data: ${JSON.stringify(e)}\n\n`);send({type:'connected',analysisId:a.id});const unsub=subscribe(a.id,send);const timer=setInterval(async()=>{const latest=await get(a.id);if(latest?.status==='completed'||latest?.status==='failed'){send({type:'snapshot',analysisId:a.id,data:latest});}},2000);req.on('close',()=>{unsub();clearInterval(timer);res.end()})});
+app.post('/api/analyses',async(req,res)=>{try{const {name,prd,selected}=req.body as {name?:string;prd?:string;selected?:Perspective[]};if(!prd?.trim())return res.status(400).json({error:'PRD is required'});if(!Array.isArray(selected)||!selected.length)return res.status(400).json({error:'Select at least one perspective'});const invalid=selected.filter(p=>!PERSPECTIVES.includes(p));if(invalid.length)return res.status(400).json({error:`Invalid perspectives: ${invalid.join(', ')}`});res.status(202).json(await createAnalysis(name||'Untitled PRD',prd,selected))}catch(e){res.status(500).json({error:e instanceof Error?e.message:String(e)})}});
+app.post('/api/analyses/:id/cancel',async(req,res)=>{cancelAnalysis(req.params.id);res.status(202).json({ok:true})});
+app.post('/api/analyses/:id/rerun/:perspective',async(req,res)=>{try{const a=await get(req.params.id);if(!a)return res.status(404).json({error:'Analysis not found'});await rerunPerspective(a,req.params.perspective as Perspective);res.status(202).json({ok:true})}catch(e){res.status(400).json({error:e instanceof Error?e.message:String(e)})}});
+app.get('/api/analyses/:id/report',async(req,res)=>{const a=await get(req.params.id);if(!a?.finalHtml)return res.status(404).send('Report not ready');res.type('html').send(a.finalHtml)});
+await initStore();
+app.listen(port,()=>console.log(`UX Scenario Agent backend listening on http://localhost:${port}`));

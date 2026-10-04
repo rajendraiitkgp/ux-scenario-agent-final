@@ -1,0 +1,1 @@
+Analyze the product concept: product summary, user value, goals, target users if explicit, jobs-to-be-done, scope boundaries, assumptions, success signals, contradictions and missing concept decisions. Create an executive-quality section with evidence.
